@@ -14,8 +14,21 @@ contract Dappazon {
             uint256 rating;
             uint256 stock;
         }
-    mapping(uint256 => Item) public items;
 
+        struct Order {
+            uint256 time;
+            Item item;
+        }
+
+    mapping(uint256 => Item) public items;
+    mapping(address => uint256) public orderCount;
+    mapping(address => mapping(uint256 => Order)) public orders;
+
+    event List(string name, uint256 cost, uint256 quantity);
+    modifier onlyOwner(){
+        require(msg.sender == owner);
+        _;
+    }
 
     constructor(){
         owner = msg.sender;
@@ -29,7 +42,10 @@ contract Dappazon {
         uint256 _cost,
         uint256 _rating,
         uint256 _stock
-    ) public {
+    ) public onlyOwner {
+
+        require(msg.sender == owner);
+
             Item memory item = Item(
             _id,
             _name,
@@ -41,6 +57,19 @@ contract Dappazon {
         );
 
         items[_id] = item;
+
+        emit List(_name, _cost, _stock);
+    }
+
+    function buy(uint256 _id) public payable {
+
+        Item memory item = items[_id];
+
+        Order memory order = Order(block.timestamp, item);
+
+        orderCount[msg.sender]++;
+        orders[msg.sender][orderCount[msg.sender]] = order;
+
     }
 }
 

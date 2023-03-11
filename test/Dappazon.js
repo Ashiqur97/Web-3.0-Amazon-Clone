@@ -51,7 +51,7 @@ describe("Dappazon", () => {
 
     it("Returns item attributes", async () =>{
         const item = await dappazon.items(ID)  
-        
+
       expect(item.id).to.equal(ID)
       expect(item.name).to.equal(NAME)
       expect(item.category).to.equal(CATEGORY)
@@ -62,4 +62,28 @@ describe("Dappazon", () => {
 
     })
   })
+
+  describe("Listing",()=>{
+    let transaction
+
+    beforeEach(async () => {
+      transaction = await dappazon.connect(deployer).list(ID, NAME, CATEGORY, IMAGE, COST, RATING, STOCK)
+      await transaction.wait()
+
+      transaction = await dappazon.connect(buyer).buy(ID, {value:COST})
+
+    })
+
+it("Updates the contract balance", async() =>{
+  expect(transaction).to.emit(dappazon,"List")
+      const result = await ethers.provider.getBalance(dappazon.address)
+      expect(result).to.equal(COST)
+    })
+    it("Updates buyer's order count", async () => {
+      const result = await dappazon.orderCount(buyer.address)
+      expect(result).to.equal(1)
+    })
+    
+  })
+
 })
